@@ -1,26 +1,60 @@
-from fastapi import APIRouter, UploadFile, File
-from typing import List
-import json
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import Depends
+from app.core.security import require_role
+import hashlib
+import asyncio
 
-from app.services.ai_engine import analyze_documents
-from app.services.ocr import extract_text_from_image
-from app.services.blockchain import store_evidence
+from app.services import ocr, ai_engine, blockchain
 
 router = APIRouter()
 
-@router.post("/upload")
-async def upload_files(files: List[UploadFile] = File(...)):
-    results = []
-    for file in files:
-        content = await file.read()
-        # Assume PDF or image, extract text
-        text = extract_text_from_image(content)  # Placeholder
-        results.append({"filename": file.filename, "text": text})
-    return {"uploaded": results}
+@router.post("/analyze", dependencies=[Depends(require_role("analyst"))])
+async def analyze_case(
+    fir: UploadFile = File(...),
+    witness: UploadFile = File(...)
+):
+    try:
+        # 1. Read files
+        fir_bytes = await fir.read()
+        witness_bytes = await witness.read()
 
-@router.post("/analyze")
-async def analyze(fir_text: str, witness_text: str):
-    analysis = analyze_documents(fir_text, witness_text)
-    # Store on blockchain
-    tx_hash = store_evidence(json.dumps(analysis))
-    return {"analysis": analysis, "tx_hash": tx_hash}
+        # 2. Hash files (Trust Layer)
+        fir_hash = hashlib.sha256(fir_bytes).hexdigest()
+        witness_hash = hashlib.sha256(witness_bytes).hexdigest()
+
+        # 3. Blockchain anchoring (non-blocking / safe)
+        try:
+            fir_tx = blockchain.store_evidence(fir_hash)
+            witness_tx = blockchain.store_evidence(witness_hash)
+        except Exception as e:
+            print("Blockchain error:", e)
+            fir_tx = "mock_tx"
+            witness_tx = "mock_tx"
+
+        # 4. OCR in parallel
+        fir_text, witness_text = await asyncio.gather(
+            asyncio.to_thread(ocr.extract_text_from_image, fir_bytes, fir.filename),
+            asyncio.to_thread(ocr.extract_text_from_image, witness_bytes, witness.filename)
+        )
+
+        # 5. AI Analysis
+        analysis = ai_engine.analyze_documents(fir_text, witness_text)
+
+        return {
+            "trust_layer": {
+                "fir_hash": fir_hash,
+                "fir_tx": fir_tx,
+                "witness_hash": witness_hash,
+                "witness_tx": witness_tx
+            },
+            "perception_layer": {
+                "fir_text": fir_text,
+                "witness_text": witness_text
+            },
+            "cognition_layer": {
+                "analysis": analysis
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,20 +1,44 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_docHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "registerEvidence",
+    "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "constructor"
+    "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_data",
-        "type": "string"
+        "internalType": "bytes32",
+        "name": "_docHash",
+        "type": "bytes32"
       }
     ],
-    "name": "storeEvidence",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "verifyEvidence",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "registrar",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "blockNumber",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

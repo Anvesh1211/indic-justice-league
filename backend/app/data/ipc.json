@@ -1,0 +1,14 @@
+{
+  "sections": [
+    {
+      "section": "302",
+      "description": "Punishment for murder",
+      "punishment": "Death or imprisonment for life"
+    },
+    {
+      "section": "307",
+      "description": "Attempt to murder",
+      "punishment": "Imprisonment up to 10 years"
+    }
+  ]
+}

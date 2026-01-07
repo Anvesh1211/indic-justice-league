@@ -1,5 +1,6 @@
 import os
 from pydantic_settings import BaseSettings
+<<<<<<< HEAD
 from pydantic import Field
 
 class Settings(BaseSettings):
@@ -25,5 +26,17 @@ class Settings(BaseSettings):
     )
     
     model_config = {"env_file": ".env", "extra": "allow"}
+=======
+
+class Settings(BaseSettings):
+    google_vision_api_key: str = ""
+    gemini_api_key: str = ""
+    polygon_rpc_url: str = "https://polygon-rpc.com/"
+    private_key: str = ""
+    contract_address: str = ""
+
+    class Config:
+        env_file = ".env"
+>>>>>>> 83e0940e75b112b54afd8bb023594b5b7a6adab4
 
 settings = Settings()

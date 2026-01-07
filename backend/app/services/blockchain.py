@@ -6,6 +6,7 @@ Handles smart contract interactions and transaction management.
 from typing import Dict, Any
 import json
 from web3 import Web3
+from eth_account import Account
 from app.core.config import settings
 
 

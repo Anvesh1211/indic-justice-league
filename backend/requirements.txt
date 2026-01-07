@@ -1,6 +1,7 @@
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.0
+pydantic-settings
 python-multipart==0.0.6
 google-cloud-vision==3.7.2
 web3==6.15.0

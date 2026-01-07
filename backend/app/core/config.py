@@ -1,14 +1,26 @@
-import os
 from pydantic_settings import BaseSettings
+from functools import lru_cache
 
 class Settings(BaseSettings):
-    google_vision_api_key: str = ""
-    gemini_api_key: str = ""
-    polygon_rpc_url: str = "https://polygon-rpc.com/"
-    private_key: str = ""
-    contract_address: str = ""
+    # AI
+    GOOGLE_VISION_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+
+    # Blockchain
+    POLYGON_RPC_URL: str | None = None
+    PRIVATE_KEY: str | None = None
+    CONTRACT_ADDRESS: str | None = None
+
+    # Mode
+    MOCK_MODE: bool = True  # turn off when real keys are added
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
-settings = Settings()
+@lru_cache
+def get_settings():
+    return Settings()
+
+settings = get_settings()
+

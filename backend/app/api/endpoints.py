@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi import Depends
+from app.services import ocr, ai_engine, blockchain
 from app.core.security import require_role
 import hashlib
 import asyncio
@@ -24,8 +25,9 @@ async def analyze_case(
 
         # 3. Blockchain anchoring (non-blocking / safe)
         try:
-            fir_tx = blockchain.store_evidence(fir_hash)
-            witness_tx = blockchain.store_evidence(witness_hash)
+            fir_tx = blockchain.anchor_evidence(fir_hash)
+            witness_tx = blockchain.anchor_evidence(witness_hash)
+
         except Exception as e:
             print("Blockchain error:", e)
             fir_tx = "mock_tx"
@@ -33,8 +35,8 @@ async def analyze_case(
 
         # 4. OCR in parallel
         fir_text, witness_text = await asyncio.gather(
-            asyncio.to_thread(ocr.extract_text_from_image, fir_bytes, fir.filename),
-            asyncio.to_thread(ocr.extract_text_from_image, witness_bytes, witness.filename)
+            asyncio.to_thread(ocr.extract_text_from_stream, fir_bytes, fir.filename),
+            asyncio.to_thread(ocr.extract_text_from_stream, witness_bytes, witness.filename)
         )
 
         # 5. AI Analysis

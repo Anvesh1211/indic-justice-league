@@ -1,32 +1,40 @@
-# AI Engine (Cognition Layer)
-# Responsibility: Backend interface stability (Member 3)
+from app.core.config import settings
+import google.generativeai as genai
 
-from typing import Dict, List
+def analyze_text(fir_text: str, witness_text: str):
+    if not settings.GEMINI_API_KEY:
+        return {
+            "summary": "AI not configured",
+            "contradictions": []
+        }
 
-def analyze_documents(fir_text: str, witness_text: str) -> Dict:
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+
+    model = genai.GenerativeModel("gemini-pro")
+
+    prompt = f"""
+    Compare the following documents and identify contradictions.
+
+    FIR:
+    {fir_text}
+
+    Witness Statement:
+    {witness_text}
+
+    Return structured contradictions.
     """
-    Analyze FIR and Witness Statement text.
-    This is a stable interface — real Gemini/RAG can replace internals later.
-    """
 
-    # 🔒 Output contract (DO NOT CHANGE KEYS)
+    response = model.generate_content(prompt)
+
     return {
-        "contradictions": [
-            {
-                "type": "Temporal",
-                "fir_excerpt": "Incident occurred at 10:00 AM",
-                "witness_excerpt": "Accused seen at market at 10:00 AM",
-                "severity": "High",
-                "explanation": "Locations are geographically inconsistent"
-            }
-        ],
-        "summary": {
-            "total_contradictions": 1,
-            "risk_level": "High",
-            "confidence_score": 0.82
-        },
-        "recommendations": [
-            "Re-verify witness timeline",
-            "Cross-check location evidence"
-        ]
+        "summary": "Analysis complete",
+        "contradictions": response.text
     }
+
+def analyze_documents(fir_text: str, witness_text: str):
+    return {
+        "summary": "AI mock analysis",
+        "contradictions": [],
+        "status": "ok"
+    }
+

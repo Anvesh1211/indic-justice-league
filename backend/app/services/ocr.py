@@ -1,51 +1,43 @@
-# OCR Service — PDF & Image Safe Handler
-# Responsibility: Backend orchestration (Member 3)
-
+from google.cloud import vision
+from google.api_core.client_options import ClientOptions
+from app.core.config import settings
 import io
+from pdf2image import convert_from_bytes
 
-def extract_text_from_image(file_bytes: bytes, filename: str = "") -> str:
-    """
-    Extract text from PDF or Image.
-    Uses Google Vision if available, otherwise falls back safely.
-    """
+def _get_vision_client():
+    if not settings.GOOGLE_VISION_API_KEY:
+        return None
 
-    try:
-        from google.cloud import vision
-        from pdf2image import convert_from_bytes
+    client_options = ClientOptions(
+        api_key=settings.GOOGLE_VISION_API_KEY
+    )
+    return vision.ImageAnnotatorClient(client_options=client_options)
 
-        client = vision.ImageAnnotatorClient()
-        full_text = ""
 
-        # 📄 Handle PDF
-        if filename.lower().endswith(".pdf"):
-            images = convert_from_bytes(file_bytes, dpi=300)
+def extract_text_from_stream(file_content: bytes, filename: str) -> str:
+    client = _get_vision_client()
 
-            for idx, img in enumerate(images):
-                img_byte_arr = io.BytesIO()
-                img.save(img_byte_arr, format="JPEG")
+    if client is None:
+        return "OCR not configured"
 
-                image = vision.Image(content=img_byte_arr.getvalue())
-                response = client.document_text_detection(image=image)
+    full_text = ""
 
-                if response.error.message:
-                    raise Exception(response.error.message)
-
-                full_text += f"\n--- Page {idx + 1} ---\n"
-                full_text += response.full_text_annotation.text
-
-            return full_text.strip()
-
-        # 🖼️ Handle image
-        image = vision.Image(content=file_bytes)
+    if filename.lower().endswith(".pdf"):
+        images = convert_from_bytes(file_content, dpi=300)
+        for i, img in enumerate(images):
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG")
+            image = vision.Image(content=buf.getvalue())
+            response = client.document_text_detection(image=image)
+            full_text += f"\n--- Page {i+1} ---\n"
+            full_text += response.full_text_annotation.text
+    else:
+        image = vision.Image(content=file_content)
         response = client.document_text_detection(image=image)
+        full_text = response.full_text_annotation.text
 
-        if response.error.message:
-            raise Exception(response.error.message)
+    return full_text
 
-        return response.full_text_annotation.text
-
-    except Exception as e:
-        # 🔥 Safe fallback (DO NOT CRASH BACKEND)
-        print("OCR fallback activated:", e)
-        return "Mock OCR text (PDF/Image OCR not configured)"
+def extract_text_from_image(file_bytes: bytes, filename: str):
+    return "OCR not configured"
 

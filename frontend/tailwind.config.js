@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import colors from 'tailwindcss/colors'
+
 export default {
   content: [
     "./index.html",
@@ -7,20 +9,47 @@ export default {
   theme: {
     extend: {
       colors: {
-        'judicial-blue': '#0F172A',
-        'paper-white': '#F8FAFC',
-        'polygon-purple': '#8247E5',
-        'crimson-red': '#EF4444',
-        'slate-grey': '#334155',
+        // Government / Judicial palette (semantic tokens)
+        'gov-primary': colors.slate[900],
+        'gov-primary-900': colors.slate[900],
+        'gov-primary-800': colors.slate[800],
+        'gov-bg-muted': colors.gray[50],
+        'gov-panel-bg': colors.slate[50],
+        'gov-border': colors.slate[200],
+        'gov-judicial-blue': '#0B3B5E',
+        'gov-emerald': colors.emerald[600],
+        'gov-amber': colors.amber[500],
+        'gov-rose-muted': colors.rose[600]
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Merriweather', 'serif'],
-        sans: ['Inter', 'Roboto', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Helvetica', 'Arial'],
+        serif: ['Merriweather', 'serif']
+      },
+      borderRadius: {
+        'xl': '1rem'
       },
       boxShadow: {
-          'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-      }
-    },
+        panel: '0 1px 6px rgba(2,6,23,0.06)',
+        'panel-md': '0 4px 14px rgba(2,6,23,0.08)'
+      },
+      spacing: {
+        '18': '4.5rem'
+      },
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            color: theme('colors.slate.800'),
+            a: {
+              color: theme('colors.gov-judicial-blue'),
+              textDecoration: 'underline'
+            },
+            h1: { color: theme('colors.slate.900'), letterSpacing: '0.02em' },
+            h2: { color: theme('colors.slate.900') },
+            h3: { color: theme('colors.slate.800') }
+          }
+        }
+      })
+    }
   },
   plugins: [],
 }

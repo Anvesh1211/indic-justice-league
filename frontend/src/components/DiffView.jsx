@@ -1,73 +1,32 @@
-import React, { useState } from 'react';
-import jsPDF from 'jspdf';
+import React, { useMemo } from "react";
+import { FileText, AlertTriangle, CheckCircle, Info, Hash } from 'lucide-react';
 
-const DiffView = ({ analysis, firText, witnessText, onBack }) => {
-  // Use props if available, else fall back to mock data
-  const safeFirText = firText || `FIRST INFORMATION REPORT... (Mock)`;
-  const safeWitnessText = witnessText || `WITNESS STATEMENT... (Mock)`;
+const DiffView = ({ analysis, firText, witnessText }) => {
+  const diffResults = useMemo(() => {
+    // Simple diff algorithm - compare line by line
+    const firLines = firText.split("\n");
+    const witnessLines = witnessText.split("\n");
 
-  // Parse discrepancies from analysis if available
-  const discrepancies = analysis?.discrepancies || [];
-  const similarityScore = analysis?.similarity_score ? (analysis.similarity_score * 100).toFixed(0) : "N/A";
-  const confidenceScore = analysis?.confidence ? (analysis.confidence * 100).toFixed(0) : "N/A";
-  
-  // IPC Section Mapping (Simple Heuristic for Demo)
-  const getIPCSections = (text) => {
-    const ipcMapping = {
-       "robbery": "Section 390",
-       "theft": "Section 378",
-       "murder": "Section 300",
-       "hurt": "Section 319",
-       "grievous hurt": "Section 320",
-       "assault": "Section 351",
-       "cheating": "Section 415"
-    };
-    
-    const sections = new Set();
-    const lowerText = text.toLowerCase();
-    
-    Object.keys(ipcMapping).forEach(keyword => {
-        if (lowerText.includes(keyword)) {
-            sections.add(`${ipcMapping[keyword]} (${keyword.toUpperCase()})`);
-        }
-    });
+    const diffs = [];
+    const maxLength = Math.max(firLines.length, witnessLines.length);
 
-    return Array.from(sections);
-  };
+    for (let i = 0; i < maxLength; i++) {
+      const firLine = firLines[i] || "";
+      const witnessLine = witnessLines[i] || "";
 
-  const detectedIPC = getIPCSections(safeFirText);
-
-  // PDF Generation Logic
-  const handleGenerateReport = () => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(20);
-    doc.setTextColor(15, 23, 42); // Judicial Blue
-    doc.text("Nyaya-Drishti: Evidence Analysis Report", 20, 20);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
-    
-    // Summary
-    doc.setDrawColor(0);
-    doc.line(20, 35, 190, 35);
-    doc.setTextColor(0);
-    doc.setFontSize(14);
-    doc.text("Analysis Summary", 20, 45);
-    
-    doc.setFontSize(12);
-    doc.text(`Similarity Score: ${similarityScore}%`, 20, 55);
-    doc.text(`AI Confidence: ${confidenceScore}%`, 20, 65);
-    
-    // IPC Sections
-    if (detectedIPC.length > 0) {
-        doc.setFontSize(14);
-        doc.text("Suggested IPC Sections", 20, 80);
-        doc.setFontSize(12);
-        detectedIPC.forEach((ipc, index) => {
-            doc.text(`• ${ipc}`, 25, 90 + (index * 7));
+      if (firLine !== witnessLine) {
+        diffs.push({
+          lineNumber: i + 1,
+          firText: firLine,
+          witnessText: witnessLine,
+          isSame: false,
+        });
+      } else if (firLine) {
+        diffs.push({
+          lineNumber: i + 1,
+          firText: firLine,
+          witnessText: witnessLine,
+          isSame: true,
         });
     }
 
@@ -97,139 +56,174 @@ const DiffView = ({ analysis, firText, witnessText, onBack }) => {
   };
   
   return (
-    <div className="flex h-screen bg-paper-white font-sans text-slate-grey overflow-hidden">
-      
-      {/* 1. Sidebar Navigation (Left) */}
-      <nav className="w-20 bg-judicial-blue flex flex-col items-center py-8 z-20 shadow-xl">
-        <div className="mb-10 p-2 bg-paper-white/10 rounded-lg cursor-pointer" onClick={onBack}>
-           {/* Back Arrow / Logo */}
-           <svg className="w-8 h-8 text-paper-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    <div className="bg-white border border-gov-border rounded-xl overflow-hidden shadow-panel">
+      {/* Analysis Header */}
+      <div className="bg-gov-panel-bg px-6 py-4 border-b border-gov-border">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gov-primary tracking-wide flex items-center">
+            <FileText className="w-5 h-5 mr-2 text-gov-judicial-blue" />
+            Document Analysis Results
+          </h3>
+          <div className="flex items-center space-x-2">
+            <Hash className="w-4 h-4 text-slate-500" />
+            <span className="text-xs text-slate-500 font-mono">Analysis ID: ANA-{Date.now().toString(36).toUpperCase()}</span>
+          </div>
         </div>
-        
-        <div className="flex flex-col space-y-8">
-            <div className="p-3 rounded-xl cursor-pointer transition-all bg-polygon-purple text-white shadow-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="p-6 border-b border-gov-border bg-gov-bg-muted/30">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border border-gov-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-slate-600">Similarity Score</span>
+              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Info className="w-4 h-4 text-gov-judicial-blue" />
+              </div>
             </div>
-             <div className="p-3 rounded-xl cursor-pointer text-gray-400 hover:bg-white/5 hover:text-white transition-all">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-             </div>
-             <div className="p-3 rounded-xl cursor-pointer text-gray-400 hover:bg-white/5 hover:text-white transition-all">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-             </div>
+            <div className="text-2xl font-bold text-gov-primary">
+              {(analysis?.similarity_score * 100 || 0).toFixed(1)}%
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              {analysis?.similarity_score > 0.8 ? 'High Match' : analysis?.similarity_score > 0.5 ? 'Moderate Match' : 'Low Match'}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gov-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-slate-600">Discrepancies</span>
+              <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 text-gov-amber" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gov-primary">
+              {analysis?.discrepancies?.length || 0}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              {analysis?.discrepancies?.length > 0 ? 'Requires Review' : 'No Issues Detected'}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gov-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-slate-600">Status</span>
+              <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-gov-emerald" />
+              </div>
+            </div>
+            <div className="text-lg font-bold text-gov-emerald">Verified</div>
+            <div className="text-xs text-slate-500 mt-1">Blockchain Secured</div>
+          </div>
         </div>
-      </nav>
+      </div>
 
-      {/* 2. Main Content Area */}
-      <main className="flex-1 flex flex-col relative">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shadow-sm z-10">
-            <div className="flex items-center space-x-4">
-                <h1 className="font-serif text-2xl text-judicial-blue font-bold tracking-tight">Case #2024-881</h1>
-                <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold uppercase tracking-wider rounded-sm border border-green-200">
-                    {analysis ? "Analysis Complete" : "Analysis Pending"}
-                </span>
+      {/* Document Comparison */}
+      <div className="p-6 border-b border-gov-border">
+        <h4 className="text-sm font-semibold text-gov-primary uppercase tracking-wide mb-4">Side-by-Side Comparison</h4>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="font-semibold text-gov-primary flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-gov-judicial-blue" />
+                FIR Document
+              </h5>
+              <span className="text-xs text-slate-500 font-mono">DOC-001</span>
             </div>
-            
-            <div className="flex items-center space-x-4">
-                 {/* IPC Tags in Header */}
-                 {detectedIPC.length > 0 && (
-                     <div className="flex space-x-2 mr-4">
-                        {detectedIPC.map((ipc, idx) => (
-                            <span key={idx} className="text-xs font-bold text-white bg-crimson-red px-2 py-1 rounded">
-                                {ipc}
-                            </span>
-                        ))}
-                     </div>
-                 )}
-                <span className="text-sm text-slate-500">Last updated: Just now</span>
-                <div className="w-8 h-8 bg-judicial-blue rounded-full flex items-center justify-center text-white font-serif font-bold">JD</div>
-            </div>
-        </header>
-
-        {/* Diff View Container */}
-        <div className="flex-1 flex overflow-hidden p-6 gap-6 relative">
-            
-            {/* Visual Metaphor Background */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #0F172A 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-
-            {/* Left Panel: FIR */}
-            <div className="flex-1 bg-white rounded-none border border-gray-200 shadow-card flex flex-col">
-                <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h2 className="font-serif text-lg font-semibold text-judicial-blue">FIR Document</h2>
-                    <span className="text-xs text-gray-400 font-mono">HASH: 0x7A...9F</span>
-                </div>
-                <div className="p-8 font-serif leading-relaxed text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto relative">
-                    {safeFirText}
+            <div className="bg-gov-bg-muted border border-gov-border rounded-xl p-4 max-h-96 overflow-y-auto">
+              {diffResults.map((diff, index) => (
+                <div
+                  key={index}
+                  className={`py-2 px-3 text-sm font-mono border-b border-gov-border/50 last:border-0 ${
+                    diff.isSame ? "bg-white" : "bg-red-50 border-l-4 border-l-red-400"
+                  }`}
+                >
+                  <div className="flex items-start">
+                    <span className="text-slate-400 font-mono text-xs w-12 flex-shrink-0">
+                      {String(diff.lineNumber).padStart(3, '0')}
+                    </span>
+                    <span className={`flex-1 ${diff.isSame ? "text-slate-700" : "text-red-700 font-medium"}`}>
+                      {diff.firText || <em className="text-slate-400 italic">[empty line]</em>}
+                    </span>
+                  </div>
                 </div>
             </div>
+          </div>
 
-            {/* Center: Connectors (Visual Only for Mockup) */}
-            <div className="w-12 flex flex-col items-center justify-center relative pointer-events-none">
-                 <div className="absolute top-1/4 w-full h-px bg-crimson-red/20"></div>
-                 <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-6 h-6 bg-paper-white border border-crimson-red rounded-full flex items-center justify-center z-10">
-                        <span className="text-crimson-red text-xs">!</span>
-                    </div>
-                 </div>
-                 <div className="absolute top-3/4 w-full h-px bg-crimson-red/20"></div>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="font-semibold text-gov-primary flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-gov-emerald" />
+                Witness Statement
+              </h5>
+              <span className="text-xs text-slate-500 font-mono">DOC-002</span>
             </div>
-
-            {/* Right Panel: Witness Statement */}
-            <div className="flex-1 bg-white rounded-none border border-gray-200 shadow-card flex flex-col">
-                <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h2 className="font-serif text-lg font-semibold text-judicial-blue">Witness Statements</h2>
-                     <span className="text-xs text-gray-400 font-mono">HASH: 0x3B...2C</span>
-                </div>
-                <div className="p-8 font-serif leading-relaxed text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto">
-                     {safeWitnessText}
+            <div className="bg-gov-bg-muted border border-gov-border rounded-xl p-4 max-h-96 overflow-y-auto">
+              {diffResults.map((diff, index) => (
+                <div
+                  key={index}
+                  className={`py-2 px-3 text-sm font-mono border-b border-gov-border/50 last:border-0 ${
+                    diff.isSame ? "bg-white" : "bg-emerald-50 border-l-4 border-l-emerald-400"
+                  }`}
+                >
+                  <div className="flex items-start">
+                    <span className="text-slate-400 font-mono text-xs w-12 flex-shrink-0">
+                      {String(diff.lineNumber).padStart(3, '0')}
+                    </span>
+                    <span className={`flex-1 ${diff.isSame ? "text-slate-700" : "text-emerald-700 font-medium"}`}>
+                      {diff.witnessText || <em className="text-slate-400 italic">[empty line]</em>}
+                    </span>
+                  </div>
                 </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            {/* 3. AI Insights Sidebar (Floating) */}
-            <aside className="w-80 bg-judicial-blue text-paper-white shadow-2xl flex flex-col">
-                <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center space-x-2 text-polygon-purple mb-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        <span className="text-xs font-bold uppercase tracking-widest">AI Analysis</span>
-                    </div>
-                    <h3 className="font-serif text-xl font-semibold">Insights Panel</h3>
+      {/* Discrepancies */}
+      {analysis?.discrepancies?.length > 0 && (
+        <div className="p-6 border-b border-gov-border bg-amber-50/30">
+          <h4 className="text-sm font-semibold text-gov-primary uppercase tracking-wide mb-4 flex items-center">
+            <AlertTriangle className="w-4 h-4 mr-2 text-gov-amber" />
+            Identified Discrepancies ({analysis.discrepancies.length})
+          </h4>
+          <div className="space-y-3">
+            {analysis.discrepancies.map((disc, index) => (
+              <div key={index} className="bg-white border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                    <span className="text-amber-700 font-semibold text-sm">{index + 1}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700 font-medium leading-relaxed">{disc}</p>
+                  </div>
                 </div>
-                
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {discrepancies.length > 0 ? (
-                        discrepancies.map((disc, i) => (
-                             <InsightCard
-                                key={i}
-                                title={disc.source || "Discrepancy"}
-                                severity="High"
-                                desc={disc.details || disc}
-                            />
-                        ))
-                    ) : (
-                         <div className="text-sm text-gray-400">No major discrepancies found yet.</div>
-                    )}
-                    
-                    <div className="mt-8 pt-6 border-t border-white/10">
-                        <h4 className="text-sm font-semibold text-gray-400 mb-4">CONSISTENCY SCORE</h4>
-                        <div className="flex items-end space-x-2">
-                            <span className="text-4xl font-bold text-white">{similarityScore}%</span>
-                        </div>
-                        <div className="w-full bg-slate-700 h-1 mt-2 rounded-full overflow-hidden">
-                            <div className="bg-crimson-red h-full" style={{ width: `${similarityScore}%` }}></div>
-                        </div>
-                    </div>
-                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-                <div className="p-4 bg-slate-900 border-t border-white/5">
-                    <button 
-                        onClick={handleGenerateReport}
-                        className="w-full py-3 bg-paper-white text-judicial-blue font-semibold hover:bg-gray-100 transition-colors uppercase text-sm tracking-wider"
-                    >
-                        Generate Report (PDF)
-                    </button>
+      {/* Recommendations */}
+      {analysis?.recommendations?.length > 0 && (
+        <div className="p-6 bg-gov-bg-muted/30">
+          <h4 className="text-sm font-semibold text-gov-primary uppercase tracking-wide mb-4 flex items-center">
+            <CheckCircle className="w-4 h-4 mr-2 text-gov-emerald" />
+            Judicial Recommendations ({analysis.recommendations.length})
+          </h4>
+          <div className="space-y-3">
+            {analysis.recommendations.map((rec, index) => (
+              <div key={index} className="bg-white border border-gov-border rounded-xl p-4">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700 font-medium leading-relaxed">{rec}</p>
+                  </div>
                 </div>
-            </aside>
-
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </div>

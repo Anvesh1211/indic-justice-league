@@ -1,0 +1,37 @@
+[
+  {
+    "case_id": "GC-01",
+    "contradiction_type": "Time",
+    "fir": "The incident occurred on 5 January 2026 at 9:00 PM near MG Road, Pune. The accused was Ramesh Patil.",
+    "witness": "I witnessed the incident on 5 January 2026 at around 7:00 PM near MG Road, Pune. The accused was Ramesh Patil.",
+    "expected_output": "Time mismatch detected between FIR and witness statement."
+  },
+  {
+    "case_id": "GC-02",
+    "contradiction_type": "Location",
+    "fir": "The theft took place at FC Road, Pune on 12 February 2026 at 6:30 PM.",
+    "witness": "The theft happened near JM Road, Pune on 12 February 2026 at around 6:30 PM.",
+    "expected_output": "Location mismatch detected between FIR and witness statement."
+  },
+  {
+    "case_id": "GC-03",
+    "contradiction_type": "Person",
+    "fir": "According to the FIR, the accused involved in the assault was Suresh Kulkarni.",
+    "witness": "I clearly saw that the person involved in the assault was Ramesh Kulkarni.",
+    "expected_output": "Person name mismatch detected between FIR and witness statement."
+  },
+  {
+    "case_id": "GC-04",
+    "contradiction_type": "Event Description",
+    "fir": "The FIR states that the accused threatened the victim verbally but did not use physical force.",
+    "witness": "The accused physically assaulted the victim by pushing and hitting him.",
+    "expected_output": "Contradiction detected in event description (verbal threat vs physical assault)."
+  },
+  {
+    "case_id": "GC-05",
+    "contradiction_type": "No Contradiction (Control Case)",
+    "fir": "The accident occurred on 20 March 2026 at 8:00 AM near Shivaji Nagar, Pune involving a blue car.",
+    "witness": "The accident happened on 20 March 2026 at around 8:00 AM near Shivaji Nagar, Pune involving a blue car.",
+    "expected_output": "No significant contradiction detected."
+  }
+]

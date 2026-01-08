@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     polygon_rpc_url: str = "https://polygon-rpc.com/"
     private_key: str = ""
     contract_address: str = ""
+    google_application_credentials: str = ""
+    frontend_url: str = "http://localhost:5173"
 
     class Config:
         env_file = ".env"

@@ -28,12 +28,33 @@ const DiffView = ({ analysis, firText, witnessText }) => {
           witnessText: witnessLine,
           isSame: true,
         });
-      }
     }
 
-    return diffs;
-  }, [firText, witnessText]);
+    // Discrepancies
+    const startY = detectedIPC.length > 0 ? 110 : 80;
+    doc.setFontSize(14);
+    doc.text("Identified Discrepancies", 20, startY);
+    
+    doc.setFontSize(10);
+    let yPos = startY + 10;
+    
+    discrepancies.forEach((disc, i) => {
+       const text = typeof disc === 'string' ? disc : disc.details || "Discrepancy detected";
+       const splitText = doc.splitTextToSize(`${i+1}. ${text}`, 170);
+       doc.text(splitText, 20, yPos);
+       yPos += (splitText.length * 5) + 5; // spacing
+    });
+    
+    // Blockchain Proof
+    if (analysis?.tx_hash) {
+       doc.setFontSize(10);
+       doc.setTextColor(128); // Grey
+       doc.text(`Blockchain Transaction Hash: ${analysis.tx_hash}`, 20, 280);
+    }
 
+    doc.save("Evidence_Analysis_Report.pdf");
+  };
+  
   return (
     <div className="bg-white border border-gov-border rounded-xl overflow-hidden shadow-panel">
       {/* Analysis Header */}
@@ -125,7 +146,6 @@ const DiffView = ({ analysis, firText, witnessText }) => {
                     </span>
                   </div>
                 </div>
-              ))}
             </div>
           </div>
 
@@ -154,7 +174,6 @@ const DiffView = ({ analysis, firText, witnessText }) => {
                     </span>
                   </div>
                 </div>
-              ))}
             </div>
           </div>
         </div>
@@ -206,9 +225,24 @@ const DiffView = ({ analysis, firText, witnessText }) => {
             ))}
           </div>
         </div>
-      )}
+      </main>
     </div>
   );
 };
+
+// Sub-components
+const InsightCard = ({ title, severity, desc }) => (
+    <div className="bg-white/5 border border-white/10 p-4 rounded-sm hover:bg-white/10 transition-colors cursor-pointer group">
+        <div className="flex justify-between items-start mb-2">
+            <h4 className="font-semibold text-sm text-white group-hover:text-polygon-purple transition-colors truncate pr-2">{title}</h4>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${severity === 'High' ? 'border-crimson-red text-crimson-red' : 'border-yellow-500 text-yellow-500'}`}>
+                {severity}
+            </span>
+        </div>
+        <p className="text-xs text-gray-400 leading-relaxed">
+            {desc}
+        </p>
+    </div>
+);
 
 export default DiffView;

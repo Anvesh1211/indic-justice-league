@@ -1,12 +1,10 @@
 import React from "react";
 import FileUpload from "./FileUpload";
-import DiffView from "./DiffView";
-import { analyzeDocuments } from "../services/api";
+import { uploadFiles, analyzeDocuments } from "../services/api";
 
-const Dashboard = () => {
+const Dashboard = ({ onAnalysisComplete }) => {
   const [firText, setFirText] = React.useState("");
   const [witnessText, setWitnessText] = React.useState("");
-  const [analysis, setAnalysis] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
@@ -14,8 +12,17 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      // TODO: Implement file upload handling
-      console.log("Files uploaded:", files);
+      
+      const fileArray = Array.from(files);
+      const result = await uploadFiles(fileArray);
+      
+      if (result.status === "success" && result.uploaded.length > 0) {
+        // Simple heuristic: First file -> FIR, Second -> Witness
+        // In a real app, we'd asking the user to tag them
+        if (result.uploaded[0]) setFirText(result.uploaded[0].text);
+        if (result.uploaded[1]) setWitnessText(result.uploaded[1].text);
+      }
+      
     } catch (err) {
       setError("Failed to upload files: " + err.message);
     } finally {
@@ -33,7 +40,9 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       const result = await analyzeDocuments(firText, witnessText);
-      setAnalysis(result);
+      if (onAnalysisComplete) {
+        onAnalysisComplete(result, firText, witnessText);
+      }
     } catch (err) {
       setError("Failed to analyze documents: " + err.message);
     } finally {
@@ -44,7 +53,6 @@ const Dashboard = () => {
   const handleClear = () => {
     setFirText("");
     setWitnessText("");
-    setAnalysis(null);
     setError(null);
   };
 
@@ -112,18 +120,6 @@ const Dashboard = () => {
       {error && (
         <div className="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           <p>{error}</p>
-        </div>
-      )}
-
-      {/* Results Section */}
-      {analysis && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Analysis Results</h2>
-          <DiffView
-            analysis={analysis}
-            firText={firText}
-            witnessText={witnessText}
-          />
         </div>
       )}
     </div>

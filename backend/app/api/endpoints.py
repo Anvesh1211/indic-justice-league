@@ -60,23 +60,27 @@ async def upload_files(files: list[UploadFile] = File(...)):
 
 
 @router.post("/analyze")
-async def analyze_endpoint(request_data: Dict[str, str]):
+async def analyze_endpoint(request_data: Dict[str, Any]):
     """
-    Analyze FIR and witness statement for discrepancies.
+    Analyze FIR and witness statements for discrepancies.
     Stores evidence on blockchain.
     """
     try:
         fir_text = request_data.get("fir_text", "")
-        witness_text = request_data.get("witness_text", "")
+        witness_statements = request_data.get("witness_statements", [])
         
-        if not fir_text or not witness_text:
+        # Backward compatibility for single witness text
+        if not witness_statements and request_data.get("witness_text"):
+            witness_statements = [request_data.get("witness_text")]
+        
+        if not fir_text or not witness_statements:
             raise HTTPException(
                 status_code=400,
-                detail="Both fir_text and witness_text are required"
+                detail="fir_text and at least one witness statement are required"
             )
         
         # Analyze documents
-        analysis = ai_analyze(fir_text, witness_text)
+        analysis = ai_analyze(fir_text, witness_statements)
         
         # Store evidence on blockchain
         tx_hash = store_evidence(json.dumps(analysis))

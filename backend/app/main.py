@@ -6,10 +6,14 @@ from app.core.config import settings
 
 app = FastAPI(title="Nyaya-Drishti Backend", version="1.0.0")
 
-# CORS middleware
+# CORS middleware - Updated for Vite default port 5173
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=[
+        settings.frontend_url,
+        "http://localhost:5173",  # Vite default
+        "http://localhost:3000"   # React default
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -5,12 +5,21 @@ Uses Google Cloud Vision API for optical character recognition.
 
 from typing import Union, Dict, Any
 import json
+import os
 from app.core.config import settings
 
 try:
     from google.cloud import vision
+    # Set credentials from config
+    if settings.google_application_credentials:
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
 except ImportError:
     vision = None
+
+try:
+    import PyPDF2
+except ImportError:
+    PyPDF2 = None
 
 
 def extract_text_from_image(image_bytes: bytes) -> str:
@@ -50,9 +59,20 @@ def extract_text_from_pdf(file_content: bytes) -> str:
         Extracted text from the PDF
     """
     try:
-        # TODO: Implement PDF text extraction using pdfplumber or PyPDF2
-        # Could use OCR for scanned PDFs
-        return "Text extracted from PDF (placeholder)"
+        if PyPDF2 is None:
+            return "PDF text extraction unavailable (PyPDF2 not installed)"
+        
+        import io
+        pdf_file = io.BytesIO(file_content)
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        
+        text_content = []
+        for page in pdf_reader.pages:
+            text = page.extract_text()
+            if text:
+                text_content.append(text)
+        
+        return "\n".join(text_content)
     except Exception as e:
         raise Exception(f"PDF Extraction Error: {str(e)}")
 

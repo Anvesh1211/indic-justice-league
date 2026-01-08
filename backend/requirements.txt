@@ -1,10 +1,16 @@
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.0
+<<<<<<< HEAD
+pydantic-settings==2.1.0
+=======
 pydantic-settings
+>>>>>>> 83e0940e75b112b54afd8bb023594b5b7a6adab4
 python-multipart==0.0.6
 google-cloud-vision==3.7.2
 web3==6.15.0
 chromadb==0.4.18
 langchain==0.1.0
 google-generativeai==0.3.2
+PyPDF2==3.0.1
+python-dotenv==1.0.0
